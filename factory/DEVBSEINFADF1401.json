@@ -1,0 +1,15 @@
+{
+	"name": "DEVBSEINFADF1401",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "uksouth",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "fe3bcd1b-3857-4cd5-81db-cdd285db3866",
+		"tenantId": "770a2450-0227-4c62-90c7-4e38537f1102"
+	}
+}

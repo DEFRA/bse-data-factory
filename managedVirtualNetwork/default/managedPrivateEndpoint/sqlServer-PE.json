@@ -1,0 +1,10 @@
+{
+	"name": "sqlServer-PE",
+	"properties": {
+		"privateLinkResourceId": "/subscriptions/ec690d8b-e203-4a8f-a7d0-9e21244d23db/resourceGroups/DEVBSEINFRG1401/providers/Microsoft.Sql/servers/DEVBSEINFSQ1401",
+		"groupId": "sqlServer",
+		"fqdns": [
+			"devbseinfsq1401.database.windows.net"
+		]
+	}
+}
