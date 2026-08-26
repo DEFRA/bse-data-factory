@@ -1,6 +1,0 @@
-{
-	"name": "integrationRuntimeBSEDB",
-	"properties": {
-		"type": "SelfHosted"
-	}
-}
