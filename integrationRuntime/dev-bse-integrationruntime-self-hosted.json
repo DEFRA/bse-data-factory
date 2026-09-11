@@ -1,0 +1,6 @@
+{
+	"name": "dev-bse-integrationruntime-self-hosted",
+	"properties": {
+		"type": "SelfHosted"
+	}
+}
