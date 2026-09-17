@@ -1,0 +1,12 @@
+{
+	"name": "AmazonRdsForSqlServer",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AmazonRdsForSqlServer1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AmazonRdsForSqlServerTable",
+		"schema": []
+	}
+}
