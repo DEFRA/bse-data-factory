@@ -2,7 +2,7 @@ trigger:
   branches:
     include:
       - main
-      - local-develop-sabari
+      - feature/selfhostedIR
 
 pr:
   branches:
