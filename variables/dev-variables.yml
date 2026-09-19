@@ -1,0 +1,22 @@
+# Dev environment variables for the ADF CI/CD pipeline.
+# NOTE: azureServiceConnection is a placeholder until the Azure DevOps
+# service connection (e.g. SC-ADF-Dev-RG) is created/confirmed - see docs/Runbook.md.
+# NOTE: subscriptionName is the friendly Azure subscription name provided by the user
+# ("AZR-BSE-DEV1"). The AzureResourceManagerTemplateDeployment@3 and AzurePowerShell@5
+# tasks resolve the subscription automatically via the service connection's scope, so
+# subscriptionId (GUID) is not required in those tasks. If a raw subscription ID (GUID)
+# is later needed (e.g. for the ADFUtilities validate/export CLI commands, which expect
+# a GUID in the resource ID path), replace subscriptionId below with the actual GUID.
+variables:
+  - name: adfName
+    value: 'DEVBSEINFADF1401'
+  - name: resourceGroup
+    value: 'DEVBSEINFRG1401'
+  - name: location
+    value: 'uksouth'
+  - name: subscriptionName
+    value: 'AZR-BSE-DEV1'
+  - name: subscriptionId
+    value: 'ec690d8b-e203-4a8f-a7d0-9e21244d23db'
+  - name: azureServiceConnection
+    value: 'SC-ADF-Dev-RG'

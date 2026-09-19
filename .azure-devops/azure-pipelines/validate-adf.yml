@@ -1,0 +1,13 @@
+steps:
+  - task: NodeTool@0
+    displayName: 'Use Node.js 18.x'
+    inputs:
+      versionSpec: '18.x'
+
+  - script: |
+      npm install -g @microsoft/azure-data-factory-utilities
+    displayName: 'Install ADF Utilities'
+
+  - script: |
+      npx @microsoft/azure-data-factory-utilities validate $(Build.Repository.LocalPath) /subscriptions/$(subscriptionId)/resourceGroups/$(resourceGroup)/providers/Microsoft.DataFactory/factories/$(adfName)
+    displayName: 'Validate ADF JSON Artifacts'

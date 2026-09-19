@@ -1,0 +1,20 @@
+parameters:
+  - name: azureSubscription
+    type: string
+  - name: resourceGroup
+    type: string
+
+steps:
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: 'Deploy ADF ARM Template (Incremental)'
+    inputs:
+      deploymentScope: 'Resource Group'
+      azureResourceManagerConnection: '${{ parameters.azureSubscription }}'
+      subscriptionId: '$(subscriptionId)'
+      action: 'Create Or Update Resource Group'
+      resourceGroupName: '${{ parameters.resourceGroup }}'
+      location: '$(location)'
+      templateLocation: 'Linked artifact'
+      csmFile: '$(Pipeline.Workspace)/adf-drop/armTemplate/ARMTemplateForFactory.json'
+      csmParametersFile: '$(Pipeline.Workspace)/adf-drop/armTemplate/ARMTemplateParametersForFactory.json'
+      deploymentMode: 'Incremental'

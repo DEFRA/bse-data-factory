@@ -1,0 +1,18 @@
+{
+  "name": "AzureSqlDatabaseBSE-pipeline",
+  "properties": {
+    "annotations": [],
+    "type": "AzureSqlDatabase",
+    "typeProperties": {
+      "server": "devbseinfsq1401.database.windows.net",
+      "database": "BSE",
+      "encrypt": "mandatory",
+      "trustServerCertificate": false,
+      "authenticationType": "SystemAssignedManagedIdentity"
+    },
+    "connectVia": {
+      "referenceName": "integrationRuntimeBSEDB-pipeline",
+      "type": "IntegrationRuntimeReference"
+    }
+  }
+}
