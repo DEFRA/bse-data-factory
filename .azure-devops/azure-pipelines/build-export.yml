@@ -1,0 +1,32 @@
+parameters:
+  - name: adfName
+    type: string
+  - name: resourceGroup
+    type: string
+  - name: subscriptionId
+    type: string
+
+steps:
+  - script: |
+      npx @microsoft/azure-data-factory-utilities export $(Build.Repository.LocalPath) /subscriptions/${{ parameters.subscriptionId }}/resourceGroups/${{ parameters.resourceGroup }}/providers/Microsoft.DataFactory/factories/${{ parameters.adfName }} armTemplateOutput
+    displayName: 'Export ARM Template from ADF Source'
+
+  - task: CopyFiles@2
+    displayName: 'Stage ARM Template Artifacts'
+    inputs:
+      SourceFolder: '$(Build.Repository.LocalPath)/armTemplateOutput'
+      Contents: '**'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/armTemplate'
+
+  - task: CopyFiles@2
+    displayName: 'Stage Deployment Scripts'
+    inputs:
+      SourceFolder: '$(Build.Repository.LocalPath)/scripts'
+      Contents: '**'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/scripts'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish adf-drop Artifact'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'adf-drop'

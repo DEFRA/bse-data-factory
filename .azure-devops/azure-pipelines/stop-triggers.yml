@@ -1,0 +1,21 @@
+parameters:
+  - name: azureSubscription
+    type: string
+  - name: adfName
+    type: string
+  - name: resourceGroup
+    type: string
+
+steps:
+  - task: AzurePowerShell@5
+    displayName: 'Stop Active ADF Triggers'
+    inputs:
+      azureSubscription: '${{ parameters.azureSubscription }}'
+      ScriptType: 'FilePath'
+      ScriptPath: '$(Pipeline.Workspace)/adf-drop/scripts/Stop-ADFTriggers.ps1'
+      ScriptArguments: >
+        -ResourceGroupName "${{ parameters.resourceGroup }}"
+        -DataFactoryName "${{ parameters.adfName }}"
+        -ArmTemplateFile "$(Pipeline.Workspace)/adf-drop/armTemplate/ARMTemplateForFactory.json"
+      azurePowerShellVersion: 'LatestVersion'
+      pwsh: true

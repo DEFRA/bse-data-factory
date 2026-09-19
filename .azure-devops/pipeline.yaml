@@ -1,0 +1,62 @@
+trigger:
+  branches:
+    include:
+      - main
+      - feature/selfhostedIR
+
+pr:
+  branches:
+    include:
+      - main
+
+variables:
+  - template: ../variables/dev-variables.yml
+  - name: adfName
+    value: 'DEVBSEINFADF1401'
+  - name: resourceGroup
+    value: 'DEVBSEINFRG1401'
+
+stages:
+  - stage: Build
+    displayName: 'Validate and Package ADF Artifacts'
+    jobs:
+      - job: BuildADF
+        displayName: 'Validate + Export ARM Template'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - template: azure-pipelines/validate-adf.yml
+          - template: azure-pipelines/build-export.yml
+            parameters:
+              adfName: $(adfName)
+              resourceGroup: $(resourceGroup)
+              subscriptionId: $(subscriptionId)
+
+  - stage: DeployDev
+    displayName: 'Deploy to Dev'
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - deployment: DeployADF
+        displayName: 'Deploy ADF (-pipeline objects) to Dev'
+        environment: 'Dev'
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: azure-pipelines/stop-triggers.yml
+                  parameters:
+                    azureSubscription: $(azureServiceConnection)
+                    adfName: $(adfName)
+                    resourceGroup: $(resourceGroup)
+                - template: azure-pipelines/deploy-arm.yml
+                  parameters:
+                    azureSubscription: $(azureServiceConnection)
+                    resourceGroup: $(resourceGroup)
+                - template: azure-pipelines/start-triggers.yml
+                  parameters:
+                    azureSubscription: $(azureServiceConnection)
+                    adfName: $(adfName)
+                    resourceGroup: $(resourceGroup)

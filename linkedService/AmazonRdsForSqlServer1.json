@@ -1,0 +1,21 @@
+{
+	"name": "AmazonRdsForSqlServer1",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AmazonRdsForSqlServer",
+		"typeProperties": {
+			"server": "tses.data.dev1.dev.cerespfm.cloud",
+			"database": "tses",
+			"encrypt": "optional",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "tses_bse",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJmZmQ3YzQyYy1lZThiLTQxOTAtOTQ0Ny1hM2I0OTlhMzM1NGIiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "bse-integrationruntime-self-hosted",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

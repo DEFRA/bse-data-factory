@@ -1,0 +1,68 @@
+{
+  "name": "AzureSqlSink-pipeline",
+  "properties": {
+    "linkedServiceName": {
+      "referenceName": "AzureSqlDatabaseBSE-pipeline",
+      "type": "LinkedServiceReference"
+    },
+    "annotations": [],
+    "type": "AzureSqlTable",
+    "schema": [
+      {
+        "name": "RBSE",
+        "type": "char"
+      },
+      {
+        "name": "UnformattedRBSE",
+        "type": "varchar"
+      },
+      {
+        "name": "AnimalIID",
+        "type": "decimal",
+        "precision": 18,
+        "scale": 0
+      },
+      {
+        "name": "Eartag",
+        "type": "varchar"
+      },
+      {
+        "name": "BirthDate",
+        "type": "datetime",
+        "precision": 23,
+        "scale": 3
+      },
+      {
+        "name": "TestGroupDerivedSurvey",
+        "type": "varchar"
+      },
+      {
+        "name": "TestGroupName",
+        "type": "varchar"
+      },
+      {
+        "name": "FinalResultID",
+        "type": "tinyint",
+        "precision": 3
+      },
+      {
+        "name": "FinalResultName",
+        "type": "varchar"
+      },
+      {
+        "name": "NotificationDate",
+        "type": "smalldatetime",
+        "precision": 16,
+        "scale": 0
+      },
+      {
+        "name": "BarCode",
+        "type": "varchar"
+      }
+    ],
+    "typeProperties": {
+      "schema": "dbo",
+      "table": "BSESSImport"
+    }
+  }
+}

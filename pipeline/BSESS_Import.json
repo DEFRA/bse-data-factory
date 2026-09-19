@@ -1,0 +1,195 @@
+{
+	"name": "BSESS_Import",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AmazonRdsForSqlServerSource",
+						"sqlReaderQuery": "SELECT\n\t'00' + LEFT(LTRIM(rbseno), 2) + RIGHT('0000' + SUBSTRING(RTRIM(rbseno), 4, LEN(rbseno)), 5) AS FormattedRBSE,\n\tSample.RBSENo,\n\tanimal.AnimalID,\n\tanimal.EartagNo,\n\tanimal.BirthDate,\n\tCASE TestingGroup.TestingGroupID\n\t\tWHEN 3 THEN 'FS' WHEN 4 THEN 'CA'\n\t\tWHEN 9 THEN 'OTM3' WHEN 10 THEN 'OTM3'\n\t\tWHEN 11 THEN 'OTM3' WHEN '12' THEN 'OTM3'\n\t\tELSE NULL END AS TestGroupDerivedSurvey,\n\tTestingGroup.TestGroupName,\n\tSample.FinalResultID,\n\tResult.ResultName,\n\tanimal.NotificationDate,\n\tSample.BarCode\nFROM\n\t(animal INNER JOIN Sample ON animal.AnimalID = Sample.AnimalID)\n\tINNER JOIN TestingGroup ON animal.TestingGroupID = TestingGroup.TestingGroupID\n\tLEFT JOIN Result ON Sample.FinalResultID = Result.ResultID\nWHERE\n\tLen(RBSENo) > 3 AND\n\tanimal.SpeciesID = 1",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "TRUNCATE TABLE [dbo].[BSESSImport];",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "FormattedRBSE",
+									"type": "String",
+									"physicalType": "varchar"
+								},
+								"sink": {
+									"name": "RBSE",
+									"type": "String",
+									"physicalType": "char"
+								}
+							},
+							{
+								"source": {
+									"name": "RBSENo",
+									"type": "String",
+									"physicalType": "varchar"
+								},
+								"sink": {
+									"name": "UnformattedRBSE",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": "AnimalID",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 18
+								},
+								"sink": {
+									"name": "AnimalIID",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 18
+								}
+							},
+							{
+								"source": {
+									"name": "EartagNo",
+									"type": "String",
+									"physicalType": "varchar"
+								},
+								"sink": {
+									"name": "Eartag",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": "BirthDate",
+									"type": "DateTime",
+									"physicalType": "datetime"
+								},
+								"sink": {
+									"name": "BirthDate",
+									"type": "DateTime",
+									"physicalType": "datetime"
+								}
+							},
+							{
+								"source": {
+									"name": "TestGroupDerivedSurvey",
+									"type": "String",
+									"physicalType": "varchar"
+								},
+								"sink": {
+									"name": "TestGroupDerivedSurvey",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": "TestGroupName",
+									"type": "String",
+									"physicalType": "varchar"
+								},
+								"sink": {
+									"name": "TestGroupName",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": "FinalResultID",
+									"type": "Byte",
+									"physicalType": "tinyint"
+								},
+								"sink": {
+									"name": "FinalResultID",
+									"type": "Byte",
+									"physicalType": "tinyint"
+								}
+							},
+							{
+								"source": {
+									"name": "ResultName",
+									"type": "String",
+									"physicalType": "varchar"
+								},
+								"sink": {
+									"name": "FinalResultName",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							},
+							{
+								"source": {
+									"name": "NotificationDate",
+									"type": "DateTime",
+									"physicalType": "datetime"
+								},
+								"sink": {
+									"name": "NotificationDate",
+									"type": "DateTime",
+									"physicalType": "smalldatetime"
+								}
+							},
+							{
+								"source": {
+									"name": "BarCode",
+									"type": "String",
+									"physicalType": "varchar"
+								},
+								"sink": {
+									"name": "BarCode",
+									"type": "String",
+									"physicalType": "varchar"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "AmazonRdsForSqlServer",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "AzureSqlSink",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"annotations": []
+	}
+}

@@ -1,0 +1,9 @@
+{
+	"name": "bse-integrationruntime-self-hosted",
+	"properties": {
+		"type": "SelfHosted",
+		"typeProperties": {
+			"selfContainedInteractiveAuthoringEnabled": true
+		}
+	}
+}
