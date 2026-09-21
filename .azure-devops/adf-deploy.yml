@@ -21,7 +21,7 @@ stages:
   jobs:
   - deployment: DeployADFDEV
     displayName: Deploy to DEV
-    environment: BSE-ADF-DEV
+    environment: DEV
     strategy:
       runOnce:
         deploy:
@@ -48,7 +48,7 @@ stages:
   jobs:
   - deployment: DeployADFTST
     displayName: Deploy to TST
-    environment: BSE-ADF-TST
+    environment: TST
     strategy:
       runOnce:
         deploy:
@@ -76,7 +76,7 @@ stages:
   jobs:
   - deployment: DeployADFPRE
     displayName: Deploy to PRE
-    environment: BSE-ADF-PRE
+    environment: PRE
     strategy:
       runOnce:
         deploy:
