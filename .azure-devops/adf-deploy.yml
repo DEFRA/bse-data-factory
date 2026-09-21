@@ -6,21 +6,25 @@ trigger:
       - main
 
 pr: none
+
 pool:
   name: DEFRA-COMMON-WINDOWS-SSV3
-variables:
-- name: DataFactoryName
-  value: '$(environment)$(project)$(nc-function-infrastructure)$(nc_datafactory)$(subscriptionNumber)$(regionNumber)01'
 
-- name: ResourceGroupName
-  value: '$(environment)$(project)$(nc-function-infrastructure)$(nc_resourcegroup)$(subscriptionNumber)$(regionNumber)01'
+variables:
+
+  devResourceGroupName: 'DEVBSEINFRG1401'
+  devDataFactoryName: 'DEVBSEINFADF1401'
+
+  tstResourceGroupName: 'TSTBSEINFRG1401'
+  tstDataFactoryName: 'TSTBSEINFADF1401'
+
+  preResourceGroupName: 'PREBSEINFRG1401'
+  preDataFactoryName: 'PREBSEINFADF1401'
 
 stages:
+
 - stage: DEV
   displayName: Deploy DEV
-  variables:
-  - name: environment
-    value: DEV
   jobs:
   - deployment: DeployADFDEV
     displayName: Deploy ADF to DEV
@@ -37,16 +41,13 @@ stages:
               ScriptType: FilePath
               ScriptPath: scripts/Deploy-AdfObjects.ps1
               ScriptArguments: >
-                -ResourceGroupName "$(ResourceGroupName)"
-                -DataFactoryName "$(DataFactoryName)"
+                -ResourceGroupName "$(devResourceGroupName)"
+                -DataFactoryName "$(devDataFactoryName)"
               azurePowerShellVersion: LatestVersion
 
 - stage: TST
   displayName: Deploy TST
   dependsOn: DEV
-  variables:
-  - name: environment
-    value: TST
   jobs:
   - deployment: DeployADFTST
     displayName: Deploy ADF to TST
@@ -63,15 +64,13 @@ stages:
               ScriptType: FilePath
               ScriptPath: scripts/Deploy-AdfObjects.ps1
               ScriptArguments: >
-                -ResourceGroupName "$(ResourceGroupName)"
-                -DataFactoryName "$(DataFactoryName)"
+                -ResourceGroupName "$(tstResourceGroupName)"
+                -DataFactoryName "$(tstDataFactoryName)"
               azurePowerShellVersion: LatestVersion
+
 - stage: PRE
   displayName: Deploy PRE
   dependsOn: TST
-  variables:
-  - name: environment
-    value: PRE
   jobs:
   - deployment: DeployADFPRE
     displayName: Deploy ADF to PRE
@@ -88,6 +87,6 @@ stages:
               ScriptType: FilePath
               ScriptPath: scripts/Deploy-AdfObjects.ps1
               ScriptArguments: >
-                -ResourceGroupName "$(ResourceGroupName)"
-                -DataFactoryName "$(DataFactoryName)"
+                -ResourceGroupName "$(preResourceGroupName)"
+                -DataFactoryName "$(preDataFactoryName)"
               azurePowerShellVersion: LatestVersion
