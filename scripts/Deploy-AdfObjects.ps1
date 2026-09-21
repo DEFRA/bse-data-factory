@@ -7,6 +7,7 @@ param (
 )
 
 $ErrorActionPreference = "Stop"
+$ConfirmPreference = "None"
 
 Write-Host "====================================="
 Write-Host "ADF Deployment Started"
@@ -15,7 +16,6 @@ Write-Host "Data Factory   : $DataFactoryName"
 Write-Host "====================================="
 
 # Verify Data Factory exists
-
 Get-AzDataFactoryV2 `
     -ResourceGroupName $ResourceGroupName `
     -Name $DataFactoryName | Out-Null
@@ -25,12 +25,12 @@ Write-Host "ADF Found"
 $RepoRoot = Split-Path $PSScriptRoot -Parent
 
 # ==================================================
-# Linked Services
+# Deploy Linked Services
 # ==================================================
 
 $linkedServicePath = Join-Path $RepoRoot "linkedService"
 
-if(Test-Path $linkedServicePath)
+if (Test-Path $linkedServicePath)
 {
     Write-Host ""
     Write-Host "Deploying Linked Services..."
@@ -40,25 +40,39 @@ if(Test-Path $linkedServicePath)
         $json = Get-Content $_.FullName -Raw | ConvertFrom-Json
         $name = $json.name
 
-        Write-Host "Deploying Linked Service: $name"
+        $existing = Get-AzDataFactoryV2LinkedService `
+            -ResourceGroupName $ResourceGroupName `
+            -DataFactoryName $DataFactoryName `
+            -Name $name `
+            -ErrorAction SilentlyContinue
+
+        if ($existing)
+        {
+            Write-Host "Updating Linked Service: $name"
+        }
+        else
+        {
+            Write-Host "Creating Linked Service: $name"
+        }
 
         Set-AzDataFactoryV2LinkedService `
             -ResourceGroupName $ResourceGroupName `
             -DataFactoryName $DataFactoryName `
             -Name $name `
-            -DefinitionFile $_.FullName
+            -DefinitionFile $_.FullName `
+            -Force | Out-Null
 
         Write-Host "SUCCESS: $name"
     }
 }
 
 # ==================================================
-# Datasets
+# Deploy Datasets
 # ==================================================
 
 $datasetPath = Join-Path $RepoRoot "dataset"
 
-if(Test-Path $datasetPath)
+if (Test-Path $datasetPath)
 {
     Write-Host ""
     Write-Host "Deploying Datasets..."
@@ -68,25 +82,39 @@ if(Test-Path $datasetPath)
         $json = Get-Content $_.FullName -Raw | ConvertFrom-Json
         $name = $json.name
 
-        Write-Host "Deploying Dataset: $name"
+        $existing = Get-AzDataFactoryV2Dataset `
+            -ResourceGroupName $ResourceGroupName `
+            -DataFactoryName $DataFactoryName `
+            -Name $name `
+            -ErrorAction SilentlyContinue
+
+        if ($existing)
+        {
+            Write-Host "Updating Dataset: $name"
+        }
+        else
+        {
+            Write-Host "Creating Dataset: $name"
+        }
 
         Set-AzDataFactoryV2Dataset `
             -ResourceGroupName $ResourceGroupName `
             -DataFactoryName $DataFactoryName `
             -Name $name `
-            -DefinitionFile $_.FullName
+            -DefinitionFile $_.FullName `
+            -Force | Out-Null
 
         Write-Host "SUCCESS: $name"
     }
 }
 
 # ==================================================
-# Pipelines
+# Deploy Pipelines
 # ==================================================
 
 $pipelinePath = Join-Path $RepoRoot "pipeline"
 
-if(Test-Path $pipelinePath)
+if (Test-Path $pipelinePath)
 {
     Write-Host ""
     Write-Host "Deploying Pipelines..."
@@ -95,17 +123,31 @@ if(Test-Path $pipelinePath)
 
         $json = Get-Content $_.FullName -Raw | ConvertFrom-Json
 
-        if($json.name)
+        if ($json.name)
         {
             $name = $json.name
 
-            Write-Host "Deploying Pipeline: $name"
+            $existing = Get-AzDataFactoryV2Pipeline `
+                -ResourceGroupName $ResourceGroupName `
+                -DataFactoryName $DataFactoryName `
+                -Name $name `
+                -ErrorAction SilentlyContinue
+
+            if ($existing)
+            {
+                Write-Host "Updating Pipeline: $name"
+            }
+            else
+            {
+                Write-Host "Creating Pipeline: $name"
+            }
 
             Set-AzDataFactoryV2Pipeline `
                 -ResourceGroupName $ResourceGroupName `
                 -DataFactoryName $DataFactoryName `
                 -Name $name `
-                -DefinitionFile $_.FullName
+                -DefinitionFile $_.FullName `
+                -Force | Out-Null
 
             Write-Host "SUCCESS: $name"
         }
@@ -113,4 +155,6 @@ if(Test-Path $pipelinePath)
 }
 
 Write-Host ""
+Write-Host "====================================="
 Write-Host "ADF Deployment Completed Successfully"
+Write-Host "====================================="
