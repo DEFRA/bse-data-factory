@@ -11,16 +11,10 @@ pool:
   name: DEFRA-COMMON-WINDOWS-SSV3
 
 stages:
-
-# =====================================================
-# DEV
-# =====================================================
-
 - stage: DEV
   displayName: Deploy DEV
   jobs:
   - deployment: DeployADFDEV
-    displayName: Deploy to DEV
     environment: DEV
     strategy:
       runOnce:
@@ -32,22 +26,17 @@ stages:
             inputs:
               azureSubscription: AZR-BSE-DEV1
               ScriptType: FilePath
-              ScriptPath: scripts/Deploy-AdfObjects.ps1
+              ScriptPath: scripts/Deploy-AdfArtifacts.ps1
               ScriptArguments: >
-                -ResourceGroupName "devbseinfrarg240101"
-                -DataFactoryName "devbsedatafactory240101"
+                -ResourceGroupName "DEVBSEINFRARG240101"
+                -DataFactoryName "DEVBSEDATAFACTORY240101"
               azurePowerShellVersion: LatestVersion
-
-# =====================================================
-# TST
-# =====================================================
 
 - stage: TST
   displayName: Deploy TST
   dependsOn: DEV
   jobs:
   - deployment: DeployADFTST
-    displayName: Deploy to TST
     environment: TST
     strategy:
       runOnce:
@@ -59,23 +48,17 @@ stages:
             inputs:
               azureSubscription: AZR-BSE-TST1
               ScriptType: FilePath
-              ScriptPath: scripts/Deploy-AdfObjects.ps1
+              ScriptPath: scripts/Deploy-AdfArtifacts.ps1
               ScriptArguments: >
-                -ResourceGroupName "tstbseinfrarg240101"
-                -DataFactoryName "tstbsedatafactory240101"
+                -ResourceGroupName "TSTBSEINFRARG240101"
+                -DataFactoryName "TSTBSEDATAFACTORY240101"
               azurePowerShellVersion: LatestVersion
-
-# =====================================================
-# PRE
-# =====================================================
 
 - stage: PRE
   displayName: Deploy PRE
   dependsOn: TST
-
   jobs:
   - deployment: DeployADFPRE
-    displayName: Deploy to PRE
     environment: PRE
     strategy:
       runOnce:
@@ -84,11 +67,12 @@ stages:
           - checkout: self
           - task: AzurePowerShell@5
             displayName: Deploy ADF Artifacts
+
             inputs:
               azureSubscription: AZR-BSE-PRE1
               ScriptType: FilePath
-              ScriptPath: scripts/Deploy-AdfObjects.ps1
+              ScriptPath: scripts/Deploy-AdfArtifacts.ps1
               ScriptArguments: >
-                -ResourceGroupName "prebseinfrarg240101"
-                -DataFactoryName "prebsedatafactory240101"
+                -ResourceGroupName "PREBSEINFRARG240101"
+                -DataFactoryName "PREBSEDATAFACTORY240101"
               azurePowerShellVersion: LatestVersion
