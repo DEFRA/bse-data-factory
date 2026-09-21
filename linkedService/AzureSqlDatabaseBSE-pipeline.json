@@ -11,7 +11,7 @@
       "authenticationType": "SystemAssignedManagedIdentity"
     },
     "connectVia": {
-      "referenceName": "integrationRuntimeBSEDB-pipeline",
+      "referenceName": "integrationRuntimeBSEDB",
       "type": "IntegrationRuntimeReference"
     }
   }

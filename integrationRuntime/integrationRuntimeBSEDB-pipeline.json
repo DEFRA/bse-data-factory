@@ -1,5 +1,5 @@
 {
-  "name": "integrationRuntimeBSEDB-pipeline",
+  "name": "integrationRuntimeBSEDB",
   "properties": {
     "type": "Managed",
     "typeProperties": {

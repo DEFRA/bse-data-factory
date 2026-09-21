@@ -30,7 +30,7 @@ Write-Host "ADF Found"
 # ==================================================
 
 $requiredIRs = @(
-    "integrationRuntimeBSEDB-pipeline",
+    "integrationRuntimeBSEDB",
     "integrationRuntimeBSEDB"
 )
 
