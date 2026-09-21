@@ -4,24 +4,91 @@ trigger:
   branches:
     include:
       - main
-      - feature/*
+
+pr: none
 
 pool:
   name: DEFRA-COMMON-WINDOWS-SSV3
 
 stages:
+
+# =====================================================
+# DEV
+# =====================================================
+
 - stage: DEV
+  displayName: Deploy DEV
   jobs:
-  - job: DeployADF
-    steps:
-    - checkout: self
-    - task: AzurePowerShell@5
-      displayName: Deploy ADF Artifacts
-      inputs:
-        azureSubscription: AZR-BSE-DEV1
-        ScriptType: FilePath
-        ScriptPath: scripts/Deploy-AdfObjects.ps1
-        ScriptArguments: >
-          -ResourceGroupName devbseinfrarg01
-          -DataFactoryName devbsedatafactory01
-        azurePowerShellVersion: LatestVersion
+  - deployment: DeployADFDEV
+    displayName: Deploy to DEV
+    environment: BSE-ADF-DEV
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: AzurePowerShell@5
+            displayName: Deploy ADF Artifacts
+            inputs:
+              azureSubscription: AZR-BSE-DEV1
+              ScriptType: FilePath
+              ScriptPath: scripts/Deploy-AdfObjects.ps1
+              ScriptArguments: >
+                -ResourceGroupName "devbseinfrarg240101"
+                -DataFactoryName "devbsedatafactory240101"
+              azurePowerShellVersion: LatestVersion
+
+# =====================================================
+# TST
+# =====================================================
+
+- stage: TST
+  displayName: Deploy TST
+  dependsOn: DEV
+  jobs:
+  - deployment: DeployADFTST
+    displayName: Deploy to TST
+    environment: BSE-ADF-TST
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: AzurePowerShell@5
+            displayName: Deploy ADF Artifacts
+            inputs:
+              azureSubscription: AZR-BSE-TST1
+              ScriptType: FilePath
+              ScriptPath: scripts/Deploy-AdfObjects.ps1
+              ScriptArguments: >
+                -ResourceGroupName "tstbseinfrarg240101"
+                -DataFactoryName "tstbsedatafactory240101"
+              azurePowerShellVersion: LatestVersion
+
+# =====================================================
+# PRE
+# =====================================================
+
+- stage: PRE
+  displayName: Deploy PRE
+  dependsOn: TST
+
+  jobs:
+  - deployment: DeployADFPRE
+    displayName: Deploy to PRE
+    environment: BSE-ADF-PRE
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: AzurePowerShell@5
+            displayName: Deploy ADF Artifacts
+            inputs:
+              azureSubscription: AZR-BSE-PRE1
+              ScriptType: FilePath
+              ScriptPath: scripts/Deploy-AdfObjects.ps1
+              ScriptArguments: >
+                -ResourceGroupName "prebseinfrarg240101"
+                -DataFactoryName "prebsedatafactory240101"
+              azurePowerShellVersion: LatestVersion
