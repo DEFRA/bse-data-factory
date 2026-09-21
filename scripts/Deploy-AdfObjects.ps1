@@ -26,34 +26,32 @@ Get-AzDataFactoryV2 `
 Write-Host "ADF Found"
 
 # ==================================================
-# Integration Runtimes
+# Validate Integration Runtime
 # ==================================================
 
-$integrationRuntimes = @(
-    "integrationRuntimeBSEDB-pipeline.json",
-    "integrationRuntimeBSEDB.json"
+$requiredIRs = @(
+    "integrationRuntimeBSEDB-pipeline",
+    "integrationRuntimeBSEDB"
 )
 
-foreach ($file in $integrationRuntimes)
+foreach ($irName in $requiredIRs)
 {
-    $path = Join-Path $RepoRoot "integrationRuntime\$file"
-
-    Write-Host "Deploying Integration Runtime: $file"
-
-    $json = Get-Content $path -Raw | ConvertFrom-Json
-
-    Set-AzDataFactoryV2IntegrationRuntime `
+    $ir = Get-AzDataFactoryV2IntegrationRuntime `
         -ResourceGroupName $ResourceGroupName `
         -DataFactoryName $DataFactoryName `
-        -Name $json.name `
-        -DefinitionFile $path `
-        -Force | Out-Null
+        -Name $irName `
+        -ErrorAction SilentlyContinue
 
-    Write-Host "SUCCESS: $($json.name)"
+    if (-not $ir)
+    {
+        throw "Required Integration Runtime '$irName' does not exist in ADF '$DataFactoryName'. Deploy it through infrastructure first."
+    }
+
+    Write-Host "SUCCESS: Integration Runtime found - $irName"
 }
 
 # ==================================================
-# Linked Services
+# Deploy Linked Services
 # ==================================================
 
 $linkedServices = @(
@@ -67,9 +65,14 @@ foreach ($file in $linkedServices)
 {
     $path = Join-Path $RepoRoot "linkedService\$file"
 
-    Write-Host "Deploying Linked Service: $file"
+    if (-not (Test-Path $path))
+    {
+        throw "Linked Service file not found: $path"
+    }
 
     $json = Get-Content $path -Raw | ConvertFrom-Json
+
+    Write-Host "Deploying Linked Service: $($json.name)"
 
     Set-AzDataFactoryV2LinkedService `
         -ResourceGroupName $ResourceGroupName `
@@ -82,7 +85,7 @@ foreach ($file in $linkedServices)
 }
 
 # ==================================================
-# Datasets
+# Deploy Datasets
 # ==================================================
 
 $datasets = @(
@@ -96,9 +99,14 @@ foreach ($file in $datasets)
 {
     $path = Join-Path $RepoRoot "dataset\$file"
 
-    Write-Host "Deploying Dataset: $file"
+    if (-not (Test-Path $path))
+    {
+        throw "Dataset file not found: $path"
+    }
 
     $json = Get-Content $path -Raw | ConvertFrom-Json
+
+    Write-Host "Deploying Dataset: $($json.name)"
 
     Set-AzDataFactoryV2Dataset `
         -ResourceGroupName $ResourceGroupName `
@@ -111,7 +119,7 @@ foreach ($file in $datasets)
 }
 
 # ==================================================
-# Pipelines
+# Deploy Pipelines
 # ==================================================
 
 $pipelines = @(
@@ -123,9 +131,14 @@ foreach ($file in $pipelines)
 {
     $path = Join-Path $RepoRoot "pipeline\$file"
 
-    Write-Host "Deploying Pipeline: $file"
+    if (-not (Test-Path $path))
+    {
+        throw "Pipeline file not found: $path"
+    }
 
     $json = Get-Content $path -Raw | ConvertFrom-Json
+
+    Write-Host "Deploying Pipeline: $($json.name)"
 
     Set-AzDataFactoryV2Pipeline `
         -ResourceGroupName $ResourceGroupName `
