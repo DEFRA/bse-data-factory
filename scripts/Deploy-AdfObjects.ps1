@@ -1,76 +1,116 @@
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$ResourceGroupName,
 
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$DataFactoryName
 )
 
-Write-Host "==========================================="
+$ErrorActionPreference = "Stop"
+
+Write-Host "====================================="
 Write-Host "ADF Deployment Started"
 Write-Host "Resource Group : $ResourceGroupName"
 Write-Host "Data Factory   : $DataFactoryName"
-Write-Host "==========================================="
+Write-Host "====================================="
 
-# Verify ADF exists
+# Verify Data Factory exists
 
-$factory = Get-AzDataFactoryV2 `
+Get-AzDataFactoryV2 `
     -ResourceGroupName $ResourceGroupName `
-    -Name $DataFactoryName `
-    -ErrorAction Stop
+    -Name $DataFactoryName | Out-Null
 
-Write-Host "Found Data Factory:" $factory.DataFactoryName
+Write-Host "ADF Found"
 
-# -----------------------------------------------------
-# Deploy Dataset
-# -----------------------------------------------------
+$RepoRoot = Split-Path $PSScriptRoot -Parent
 
-$datasetPath = Join-Path $PSScriptRoot "..\pipeline\BSESS_Import.json"
+# ==================================================
+# Linked Services
+# ==================================================
+
+$linkedServicePath = Join-Path $RepoRoot "linkedService"
+
+if(Test-Path $linkedServicePath)
+{
+    Write-Host ""
+    Write-Host "Deploying Linked Services..."
+
+    Get-ChildItem $linkedServicePath -Filter "*.json" | ForEach-Object {
+
+        $json = Get-Content $_.FullName -Raw | ConvertFrom-Json
+        $name = $json.name
+
+        Write-Host "Deploying Linked Service: $name"
+
+        Set-AzDataFactoryV2LinkedService `
+            -ResourceGroupName $ResourceGroupName `
+            -DataFactoryName $DataFactoryName `
+            -Name $name `
+            -DefinitionFile $_.FullName
+
+        Write-Host "SUCCESS: $name"
+    }
+}
+
+# ==================================================
+# Datasets
+# ==================================================
+
+$datasetPath = Join-Path $RepoRoot "dataset"
 
 if(Test-Path $datasetPath)
 {
-    Write-Host "Deploying Dataset..."
+    Write-Host ""
+    Write-Host "Deploying Datasets..."
 
-    $datasetJson = Get-Content $datasetPath -Raw | ConvertFrom-Json
+    Get-ChildItem $datasetPath -Filter "*.json" | ForEach-Object {
 
-    Set-AzDataFactoryV2Dataset `
-        -ResourceGroupName $ResourceGroupName `
-        -DataFactoryName $DataFactoryName `
-        -Name $datasetJson.name `
-        -DefinitionFile $datasetPath
+        $json = Get-Content $_.FullName -Raw | ConvertFrom-Json
+        $name = $json.name
 
-    Write-Host "Dataset deployed successfully."
+        Write-Host "Deploying Dataset: $name"
+
+        Set-AzDataFactoryV2Dataset `
+            -ResourceGroupName $ResourceGroupName `
+            -DataFactoryName $DataFactoryName `
+            -Name $name `
+            -DefinitionFile $_.FullName
+
+        Write-Host "SUCCESS: $name"
+    }
 }
-else
-{
-    Write-Warning "Dataset file not found."
-}
 
-# -----------------------------------------------------
-# Deploy Pipeline
-# -----------------------------------------------------
+# ==================================================
+# Pipelines
+# ==================================================
 
-$pipelinePath = Join-Path $PSScriptRoot "..\pipeline\BSESS_Import-pipeline.json"
+$pipelinePath = Join-Path $RepoRoot "pipeline"
 
 if(Test-Path $pipelinePath)
 {
-    Write-Host "Deploying Pipeline..."
+    Write-Host ""
+    Write-Host "Deploying Pipelines..."
 
-    $pipelineJson = Get-Content $pipelinePath -Raw | ConvertFrom-Json
+    Get-ChildItem $pipelinePath -Filter "*.json" | ForEach-Object {
 
-    Set-AzDataFactoryV2Pipeline `
-        -ResourceGroupName $ResourceGroupName `
-        -DataFactoryName $DataFactoryName `
-        -Name $pipelineJson.name `
-        -DefinitionFile $pipelinePath
+        $json = Get-Content $_.FullName -Raw | ConvertFrom-Json
 
-    Write-Host "Pipeline deployed successfully."
+        if($json.name)
+        {
+            $name = $json.name
+
+            Write-Host "Deploying Pipeline: $name"
+
+            Set-AzDataFactoryV2Pipeline `
+                -ResourceGroupName $ResourceGroupName `
+                -DataFactoryName $DataFactoryName `
+                -Name $name `
+                -DefinitionFile $_.FullName
+
+            Write-Host "SUCCESS: $name"
+        }
+    }
 }
-else
-{
-    Write-Warning "Pipeline file not found."
-}
 
-Write-Host "==========================================="
-Write-Host "ADF Deployment Completed"
-Write-Host "==========================================="
+Write-Host ""
+Write-Host "ADF Deployment Completed Successfully"
