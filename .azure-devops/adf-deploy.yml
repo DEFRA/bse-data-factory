@@ -1,0 +1,37 @@
+name: $(Build.BuildId)
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+
+pool:
+  name: DEFRA-COMMON-WINDOWS-SSV3
+
+variables:
+- name: DataFactoryName
+  value: '$(environment)$(project)$(nc-function-infrastructure)$(nc_datafactory)$(subscriptionNumber)$(regionNumber)01'
+- name: ResourceGroupName
+  value: '$(environment)$(project)$(nc-function-infrastructure)$(nc_resourcegroup)$(subscriptionNumber)$(regionNumber)01'
+
+stages:
+- stage: Deploy_DEV
+  jobs:
+  - deployment: DeployADF
+    environment: DEV
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: AzurePowerShell@5
+            displayName: Deploy ADF Artifacts
+            inputs:
+              azureSubscription: AZR-BSE-DEV1
+              ScriptType: FilePath
+              ScriptPath: scripts/Deploy-AdfArtifacts.ps1
+              ScriptArguments: >
+                -ResourceGroupName "$(ResourceGroupName)"
+                -DataFactoryName "$(DataFactoryName)"
+              azurePowerShellVersion: LatestVersion
