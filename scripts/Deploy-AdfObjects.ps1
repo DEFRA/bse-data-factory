@@ -9,152 +9,135 @@ param (
 $ErrorActionPreference = "Stop"
 $ConfirmPreference = "None"
 
+$RepoRoot = Split-Path $PSScriptRoot -Parent
+
 Write-Host "====================================="
-Write-Host "ADF Deployment Started"
+Write-Host "ADF Dependency Deployment Started"
 Write-Host "Resource Group : $ResourceGroupName"
 Write-Host "Data Factory   : $DataFactoryName"
 Write-Host "====================================="
 
-# Verify Data Factory exists
+# Verify ADF exists
+
 Get-AzDataFactoryV2 `
     -ResourceGroupName $ResourceGroupName `
     -Name $DataFactoryName | Out-Null
 
 Write-Host "ADF Found"
 
-$RepoRoot = Split-Path $PSScriptRoot -Parent
-
 # ==================================================
-# Deploy Linked Services
+# Integration Runtimes
 # ==================================================
 
-$linkedServicePath = Join-Path $RepoRoot "linkedService"
+$integrationRuntimes = @(
+    "integrationRuntimeBSEDB-pipeline.json",
+    "integrationRuntimeBSEDB.json"
+)
 
-if (Test-Path $linkedServicePath)
+foreach ($file in $integrationRuntimes)
 {
-    Write-Host ""
-    Write-Host "Deploying Linked Services..."
+    $path = Join-Path $RepoRoot "integrationRuntime\$file"
 
-    Get-ChildItem $linkedServicePath -Filter "*.json" | ForEach-Object {
+    Write-Host "Deploying Integration Runtime: $file"
 
-        $json = Get-Content $_.FullName -Raw | ConvertFrom-Json
-        $name = $json.name
+    $json = Get-Content $path -Raw | ConvertFrom-Json
 
-        $existing = Get-AzDataFactoryV2LinkedService `
-            -ResourceGroupName $ResourceGroupName `
-            -DataFactoryName $DataFactoryName `
-            -Name $name `
-            -ErrorAction SilentlyContinue
+    Set-AzDataFactoryV2IntegrationRuntime `
+        -ResourceGroupName $ResourceGroupName `
+        -DataFactoryName $DataFactoryName `
+        -Name $json.name `
+        -DefinitionFile $path `
+        -Force | Out-Null
 
-        if ($existing)
-        {
-            Write-Host "Updating Linked Service: $name"
-        }
-        else
-        {
-            Write-Host "Creating Linked Service: $name"
-        }
-
-        Set-AzDataFactoryV2LinkedService `
-            -ResourceGroupName $ResourceGroupName `
-            -DataFactoryName $DataFactoryName `
-            -Name $name `
-            -DefinitionFile $_.FullName `
-            -Force | Out-Null
-
-        Write-Host "SUCCESS: $name"
-    }
+    Write-Host "SUCCESS: $($json.name)"
 }
 
 # ==================================================
-# Deploy Datasets
+# Linked Services
 # ==================================================
 
-$datasetPath = Join-Path $RepoRoot "dataset"
+$linkedServices = @(
+    "AmazonRdsForSqlServer1-pipeline.json",
+    "AmazonRdsForSqlServer1.json",
+    "AzureSqlDatabaseBSE-pipeline.json",
+    "AzureSqlDatabaseBSE.json"
+)
 
-if (Test-Path $datasetPath)
+foreach ($file in $linkedServices)
 {
-    Write-Host ""
-    Write-Host "Deploying Datasets..."
+    $path = Join-Path $RepoRoot "linkedService\$file"
 
-    Get-ChildItem $datasetPath -Filter "*.json" | ForEach-Object {
+    Write-Host "Deploying Linked Service: $file"
 
-        $json = Get-Content $_.FullName -Raw | ConvertFrom-Json
-        $name = $json.name
+    $json = Get-Content $path -Raw | ConvertFrom-Json
 
-        $existing = Get-AzDataFactoryV2Dataset `
-            -ResourceGroupName $ResourceGroupName `
-            -DataFactoryName $DataFactoryName `
-            -Name $name `
-            -ErrorAction SilentlyContinue
+    Set-AzDataFactoryV2LinkedService `
+        -ResourceGroupName $ResourceGroupName `
+        -DataFactoryName $DataFactoryName `
+        -Name $json.name `
+        -DefinitionFile $path `
+        -Force | Out-Null
 
-        if ($existing)
-        {
-            Write-Host "Updating Dataset: $name"
-        }
-        else
-        {
-            Write-Host "Creating Dataset: $name"
-        }
-
-        Set-AzDataFactoryV2Dataset `
-            -ResourceGroupName $ResourceGroupName `
-            -DataFactoryName $DataFactoryName `
-            -Name $name `
-            -DefinitionFile $_.FullName `
-            -Force | Out-Null
-
-        Write-Host "SUCCESS: $name"
-    }
+    Write-Host "SUCCESS: $($json.name)"
 }
 
 # ==================================================
-# Deploy Pipelines
+# Datasets
 # ==================================================
 
-$pipelinePath = Join-Path $RepoRoot "pipeline"
+$datasets = @(
+    "AmazonRdsForSqlServer-pipeline.json",
+    "AmazonRdsForSqlServer.json",
+    "AzureSqlSink-pipeline.json",
+    "AzureSqlSink.json"
+)
 
-if (Test-Path $pipelinePath)
+foreach ($file in $datasets)
 {
-    Write-Host ""
-    Write-Host "Deploying Pipelines..."
+    $path = Join-Path $RepoRoot "dataset\$file"
 
-    Get-ChildItem $pipelinePath -Filter "*.json" | ForEach-Object {
+    Write-Host "Deploying Dataset: $file"
 
-        $json = Get-Content $_.FullName -Raw | ConvertFrom-Json
+    $json = Get-Content $path -Raw | ConvertFrom-Json
 
-        if ($json.name)
-        {
-            $name = $json.name
+    Set-AzDataFactoryV2Dataset `
+        -ResourceGroupName $ResourceGroupName `
+        -DataFactoryName $DataFactoryName `
+        -Name $json.name `
+        -DefinitionFile $path `
+        -Force | Out-Null
 
-            $existing = Get-AzDataFactoryV2Pipeline `
-                -ResourceGroupName $ResourceGroupName `
-                -DataFactoryName $DataFactoryName `
-                -Name $name `
-                -ErrorAction SilentlyContinue
+    Write-Host "SUCCESS: $($json.name)"
+}
 
-            if ($existing)
-            {
-                Write-Host "Updating Pipeline: $name"
-            }
-            else
-            {
-                Write-Host "Creating Pipeline: $name"
-            }
+# ==================================================
+# Pipelines
+# ==================================================
 
-            Set-AzDataFactoryV2Pipeline `
-                -ResourceGroupName $ResourceGroupName `
-                -DataFactoryName $DataFactoryName `
-                -Name $name `
-                -DefinitionFile $_.FullName `
-                -Force | Out-Null
+$pipelines = @(
+    "BSESS_Import-pipeline.json",
+    "BSESS_Import.json"
+)
 
-            Write-Host "SUCCESS: $name"
-        }
-    }
+foreach ($file in $pipelines)
+{
+    $path = Join-Path $RepoRoot "pipeline\$file"
+
+    Write-Host "Deploying Pipeline: $file"
+
+    $json = Get-Content $path -Raw | ConvertFrom-Json
+
+    Set-AzDataFactoryV2Pipeline `
+        -ResourceGroupName $ResourceGroupName `
+        -DataFactoryName $DataFactoryName `
+        -Name $json.name `
+        -DefinitionFile $path `
+        -Force | Out-Null
+
+    Write-Host "SUCCESS: $($json.name)"
 }
 
 Write-Host ""
 Write-Host "====================================="
-Write-Host "ADF Deployment Completed Successfully"
+Write-Host "ADF Dependency Deployment Completed"
 Write-Host "====================================="
