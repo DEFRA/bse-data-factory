@@ -17,7 +17,9 @@ Write-Host "Resource Group : $ResourceGroupName"
 Write-Host "Data Factory   : $DataFactoryName"
 Write-Host "====================================="
 
+# ==================================================
 # Verify ADF exists
+# ==================================================
 
 Get-AzDataFactoryV2 `
     -ResourceGroupName $ResourceGroupName `
@@ -26,11 +28,10 @@ Get-AzDataFactoryV2 `
 Write-Host "ADF Found"
 
 # ==================================================
-# Validate Integration Runtime
+# Create Integration Runtime If Missing
 # ==================================================
 
 $requiredIRs = @(
-    "integrationRuntimeBSEDB",
     "integrationRuntimeBSEDB"
 )
 
@@ -42,16 +43,58 @@ foreach ($irName in $requiredIRs)
         -Name $irName `
         -ErrorAction SilentlyContinue
 
-    if (-not $ir)
+    if ($ir)
     {
-        throw "Required Integration Runtime '$irName' does not exist in ADF '$DataFactoryName'. Deploy it through infrastructure first."
+        Write-Host "SUCCESS: Integration Runtime already exists - $irName"
     }
+    else
+    {
+        Write-Host "Integration Runtime not found. Creating: $irName"
 
-    Write-Host "SUCCESS: Integration Runtime found - $irName"
+        $body = @{
+            properties = @{
+                type = "Managed"
+                typeProperties = @{
+                    computeProperties = @{
+                        location = "UK South"
+                        dataFlowProperties = @{
+                            computeType = "General"
+                            coreCount = 8
+                            timeToLive = 10
+                            cleanup = $false
+                            customProperties = @()
+                        }
+                        pipelineExternalComputeScaleProperties = @{
+                            timeToLive = 60
+                            numberOfPipelineNodes = 1
+                            numberOfExternalNodes = 1
+                        }
+                    }
+                }
+                managedVirtualNetwork = @{
+                    type = "ManagedVirtualNetworkReference"
+                    referenceName = "default"
+                }
+            }
+        } | ConvertTo-Json -Depth 20
+
+        $subscriptionId = (Get-AzContext).Subscription.Id
+
+        $uri = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.DataFactory/factories/$DataFactoryName/integrationRuntimes/$irName?api-version=2018-06-01"
+
+        Invoke-AzRestMethod `
+            -Method PUT `
+            -Path $uri `
+            -Payload $body | Out-Null
+
+        Start-Sleep -Seconds 10
+
+        Write-Host "SUCCESS: Created Integration Runtime - $irName"
+    }
 }
 
 # ==================================================
-# Deploy Linked Services
+# Linked Services
 # ==================================================
 
 $linkedServices = @(
@@ -85,7 +128,7 @@ foreach ($file in $linkedServices)
 }
 
 # ==================================================
-# Deploy Datasets
+# Datasets
 # ==================================================
 
 $datasets = @(
@@ -119,7 +162,7 @@ foreach ($file in $datasets)
 }
 
 # ==================================================
-# Deploy Pipelines
+# Pipelines
 # ==================================================
 
 $pipelines = @(
