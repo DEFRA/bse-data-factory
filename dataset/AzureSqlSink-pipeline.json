@@ -2,7 +2,7 @@
   "name": "AzureSqlSink-pipeline",
   "properties": {
     "linkedServiceName": {
-      "referenceName": "AzureSqlDatabaseBSE-pipeline",
+      "referenceName": "AzureSqlDatabaseBSE",
       "type": "LinkedServiceReference"
     },
     "annotations": [],
