@@ -166,7 +166,6 @@ foreach ($file in $datasets)
 # ==================================================
 
 $pipelines = @(
-    "BSESS_Import-pipeline.json",
     "BSESS_Import.json"
 )
 
