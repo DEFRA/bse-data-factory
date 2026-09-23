@@ -98,9 +98,7 @@ foreach ($irName in $requiredIRs)
 # ==================================================
 
 $linkedServices = @(
-    "AmazonRdsForSqlServer1-pipeline.json",
     "AmazonRdsForSqlServer1.json",
-    "AzureSqlDatabaseBSE-pipeline.json",
     "AzureSqlDatabaseBSE.json"
 )
 
