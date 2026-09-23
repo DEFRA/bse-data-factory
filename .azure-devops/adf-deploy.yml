@@ -61,7 +61,6 @@ stages:
               ScriptArguments: >
                 -ResourceGroupName "$(resourceGroupName)"
                 -DataFactoryName "$(dataFactoryName)"
-                -KeyVaultName "$(keyVaultName)"
               azurePowerShellVersion: LatestVersion
 
 - stage: TST
