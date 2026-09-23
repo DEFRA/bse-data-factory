@@ -80,12 +80,17 @@ foreach ($irName in $requiredIRs)
 
         $subscriptionId = (Get-AzContext).Subscription.Id
 
-        $uri = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.DataFactory/factories/$DataFactoryName/integrationRuntimes/$irName?api-version=2018-06-01"
+        $uri = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.DataFactory/factories/$DataFactoryName/integrationRuntimes/${irName}?api-version=2018-06-01"
 
-        Invoke-AzRestMethod `
+        $resp = Invoke-AzRestMethod `
             -Method PUT `
             -Path $uri `
-            -Payload $body | Out-Null
+            -Payload $body
+
+        if ($resp.StatusCode -notin 200, 201)
+        {
+            throw "Failed to create Integration Runtime $irName ($($resp.StatusCode)): $($resp.Content)"
+        }
 
         Start-Sleep -Seconds 10
 
@@ -94,10 +99,30 @@ foreach ($irName in $requiredIRs)
 }
 
 # ==================================================
+# Verify Self-hosted Integration Runtime
+# ==================================================
+
+$shirName = "bse-integrationruntime-self-hosted"
+
+$shir = Get-AzDataFactoryV2IntegrationRuntime `
+    -ResourceGroupName $ResourceGroupName `
+    -DataFactoryName $DataFactoryName `
+    -Name $shirName `
+    -ErrorAction SilentlyContinue
+
+if (-not $shir)
+{
+    throw "Self-hosted Integration Runtime '$shirName' not found in $DataFactoryName"
+}
+
+Write-Host "SUCCESS: Self-hosted Integration Runtime exists - $shirName"
+
+# ==================================================
 # Linked Services
 # ==================================================
 
 $linkedServices = @(
+    "AzureKeyVaultRDSTSE.json",
     "AmazonRdsForSqlServer1.json",
     "AzureSqlDatabaseBSE.json"
 )
@@ -130,9 +155,7 @@ foreach ($file in $linkedServices)
 # ==================================================
 
 $datasets = @(
-    "AmazonRdsForSqlServer-pipeline.json",
     "AmazonRdsForSqlServer.json",
-    "AzureSqlSink-pipeline.json",
     "AzureSqlSink.json"
 )
 

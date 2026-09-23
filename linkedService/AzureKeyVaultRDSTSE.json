@@ -6,5 +6,6 @@
 		"typeProperties": {
 			"baseUrl": "https://DEVBSEINFKV1401.vault.azure.net/"
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
 }
