@@ -22,6 +22,8 @@ variables:
   value: 'ADF'
 - name: ncKeyVault
   value: 'KV'
+- name: ncSqlServer
+  value: 'SQ'
 - name: subscriptionNumber
   value: '1'
 - name: regionNumber
@@ -40,8 +42,12 @@ stages:
     value: DEV${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncDataFactory }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
   - name: keyVaultName
     value: DEV${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncKeyVault }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+  - name: rdsServerName
+    value: 'tses.data.dev1.dev.cerespfm.cloud'
   - name: serviceConnection
     value: AZR-${{ variables.project }}-DEV${{ variables.subscriptionNumber }}
+  - name: sqlServerName
+    value: DEV${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncSqlServer }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
   jobs:
   - deployment: DeployADFDEV
     displayName: Deploy ADF to DEV
@@ -62,6 +68,8 @@ stages:
                 -ResourceGroupName "$(resourceGroupName)"
                 -DataFactoryName "$(dataFactoryName)"
                 -KeyVaultName "$(keyVaultName)"
+                -RdsServerName "$(rdsServerName)"
+                -SqlServerName "$(sqlServerName)"
               azurePowerShellVersion: LatestVersion
 
 - stage: TST
@@ -74,8 +82,12 @@ stages:
     value: TST${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncDataFactory }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
   - name: keyVaultName
     value: TST${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncKeyVault }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+  - name: rdsServerName
+    value: 'tses.data.dev1.dev.cerespfm.cloud'
   - name: serviceConnection
     value: AZR-${{ variables.project }}-TST${{ variables.subscriptionNumber }}
+  - name: sqlServerName
+    value: TST${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncSqlServer }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
   jobs:
   - deployment: DeployADFTST
     displayName: Deploy ADF to TST
@@ -96,6 +108,8 @@ stages:
                 -ResourceGroupName "$(resourceGroupName)"
                 -DataFactoryName "$(dataFactoryName)"
                 -KeyVaultName "$(keyVaultName)"
+                -RdsServerName "$(rdsServerName)"
+                -SqlServerName "$(sqlServerName)"
               azurePowerShellVersion: LatestVersion
           
 - stage: PRE

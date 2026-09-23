@@ -6,7 +6,13 @@ param (
     [string]$DataFactoryName,
 
     [Parameter(Mandatory = $true)]
-    [string]$KeyVaultName
+    [string]$KeyVaultName,
+    
+    [Parameter(Mandatory = $true)]
+    [string]$RdsServerName,
+    
+    [Parameter(Mandatory = $true)]
+    [string]$SqlServerName
 )
 
 $ErrorActionPreference = "Stop"
@@ -19,6 +25,8 @@ Write-Host "ADF Dependency Deployment Started"
 Write-Host "Resource Group : $ResourceGroupName"
 Write-Host "Data Factory   : $DataFactoryName"
 Write-Host "Key Vault      : $KeyVaultName"
+Write-Host "RDS Server     : $RdsServerName"
+Write-Host "SQL Server     : $SqlServerName"
 Write-Host "====================================="
 
 # ==================================================
@@ -151,6 +159,39 @@ foreach ($file in $linkedServices)
         $definitionFile = Join-Path ([System.IO.Path]::GetTempPath()) "$($json.name).json"
         [System.IO.File]::WriteAllText($definitionFile, ($json | ConvertTo-Json -Depth 20))
         Write-Host "Key Vault URL set to: $($json.properties.typeProperties.baseUrl)"
+    }
+
+    # Point the RDS linked service at this environment's server
+    if ($json.properties.type -eq "AmazonRdsForSqlServer")
+    {
+        $json.properties.typeProperties.server = $RdsServerName
+        $definitionFile = Join-Path ([System.IO.Path]::GetTempPath()) "$($json.name).json"
+        [System.IO.File]::WriteAllText($definitionFile, ($json | ConvertTo-Json -Depth 20))
+        Write-Host "RDS server set to: $RdsServerName"
+    }
+    
+    # Point the Azure SQL linked service at this environment's server
+    if ($json.properties.type -eq "AzureSqlDatabase")
+    {
+        $sqlFqdn = "$($SqlServerName.ToLower()).database.windows.net"
+        $tp = $json.properties.typeProperties
+
+        if ($tp.PSObject.Properties.Name -contains "server")
+        {
+            $tp.server = $sqlFqdn
+        }
+        elseif ($tp.connectionString -is [string])
+        {
+            $tp.connectionString = $tp.connectionString -replace '(?i)(Data Source|Server)=(tcp:)?[^;,]+', ('$1=$2' + $sqlFqdn)
+        }
+        else
+        {
+            throw "Could not find the server name in $($json.name) to update"
+        }
+
+        $definitionFile = Join-Path ([System.IO.Path]::GetTempPath()) "$($json.name).json"
+        [System.IO.File]::WriteAllText($definitionFile, ($json | ConvertTo-Json -Depth 20))
+        Write-Host "SQL server set to: $sqlFqdn"
     }
 
     Write-Host "Deploying Linked Service: $($json.name)"
