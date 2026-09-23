@@ -3,7 +3,10 @@ param (
     [string]$ResourceGroupName,
 
     [Parameter(Mandatory = $true)]
-    [string]$DataFactoryName
+    [string]$DataFactoryName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$KeyVaultName
 )
 
 $ErrorActionPreference = "Stop"
@@ -15,6 +18,7 @@ Write-Host "====================================="
 Write-Host "ADF Dependency Deployment Started"
 Write-Host "Resource Group : $ResourceGroupName"
 Write-Host "Data Factory   : $DataFactoryName"
+Write-Host "Key Vault      : $KeyVaultName"
 Write-Host "====================================="
 
 # ==================================================
@@ -138,13 +142,24 @@ foreach ($file in $linkedServices)
 
     $json = Get-Content $path -Raw | ConvertFrom-Json
 
+    $definitionFile = $path
+
+    # Point any Key Vault linked service at this environment's vault
+    if ($json.properties.type -eq "AzureKeyVault")
+    {
+        $json.properties.typeProperties.baseUrl = "https://$KeyVaultName.vault.azure.net/"
+        $definitionFile = Join-Path ([System.IO.Path]::GetTempPath()) "$($json.name).json"
+        [System.IO.File]::WriteAllText($definitionFile, ($json | ConvertTo-Json -Depth 20))
+        Write-Host "Key Vault URL set to: $($json.properties.typeProperties.baseUrl)"
+    }
+
     Write-Host "Deploying Linked Service: $($json.name)"
 
     Set-AzDataFactoryV2LinkedService `
         -ResourceGroupName $ResourceGroupName `
         -DataFactoryName $DataFactoryName `
         -Name $json.name `
-        -DefinitionFile $path `
+        -DefinitionFile $definitionFile `
         -Force | Out-Null
 
     Write-Host "SUCCESS: $($json.name)"
