@@ -1,0 +1,142 @@
+name: $(Build.BuildId)
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr: none
+
+pool:
+  name: DEFRA-COMMON-WINDOWS-SSV3
+
+variables:
+
+- name: project
+  value: 'BSE'
+- name: ncFunctionInfrastructure
+  value: 'INF'
+- name: ncResourceGroup
+  value: 'RG'
+- name: ncDataFactory
+  value: 'ADF'
+- name: ncKeyVault
+  value: 'KV'
+- name: subscriptionNumber
+  value: '1'
+- name: regionNumber
+  value: '4'
+- name: instanceNumber
+  value: '01'
+
+stages:
+
+- stage: DEV
+  displayName: Deploy DEV
+  variables:
+  - name: resourceGroupName
+    value: DEV${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncResourceGroup }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+  - name: dataFactoryName
+    value: DEV${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncDataFactory }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+  - name: keyVaultName
+    value: DEV${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncKeyVault }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+  - name: serviceConnection
+    value: AZR-${{ variables.project }}-DEV${{ variables.subscriptionNumber }}
+  jobs:
+  - deployment: DeployADFDEV
+    displayName: Deploy ADF to DEV
+    environment: DEV
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+
+          - task: AzureKeyVault@2
+            displayName: Get secrets from Key Vault
+            inputs:
+              azureSubscription: ${{ variables.serviceConnection }}
+              KeyVaultName: $(keyVaultName)
+              SecretsFilter: 'tses-bse-user-name,tses-bse'
+              RunAsPreJob: false
+
+          - task: AzurePowerShell@5
+            displayName: Deploy ADF Artifacts
+            inputs:
+              azureSubscription: ${{ variables.serviceConnection }}
+              ScriptType: FilePath
+              ScriptPath: scripts/Deploy-AdfObjects.ps1
+              ScriptArguments: >
+                -ResourceGroupName "$(resourceGroupName)"
+                -DataFactoryName "$(dataFactoryName)"
+              azurePowerShellVersion: LatestVersion
+            env:
+              TSES_BSE_USERNAME: $(tses-bse-user-name)
+              TSES_BSE_PASSWORD: $(tses-bse)
+
+- stage: TST
+  displayName: Deploy TST
+  dependsOn: DEV
+  variables:
+  - name: resourceGroupName
+    value: TST${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncResourceGroup }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+  - name: dataFactoryName
+    value: TST${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncDataFactory }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+  - name: keyVaultName
+    value: TST${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncKeyVault }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+  - name: serviceConnection
+    value: AZR-${{ variables.project }}-TST${{ variables.subscriptionNumber }}
+  jobs:
+  - deployment: DeployADFTST
+    displayName: Deploy ADF to TST
+    environment: TST
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+
+          - task: AzureKeyVault@2
+            displayName: Get secrets from Key Vault
+            inputs:
+              azureSubscription: ${{ variables.serviceConnection }}
+              KeyVaultName: $(keyVaultName)
+              SecretsFilter: 'tses-bse-user-name,tses-bse'
+              RunAsPreJob: false
+
+          - task: AzurePowerShell@5
+            displayName: Deploy ADF Artifacts
+            inputs:
+              azureSubscription: ${{ variables.serviceConnection }}
+              ScriptType: FilePath
+              ScriptPath: scripts/Deploy-AdfObjects.ps1
+              ScriptArguments: >
+                -ResourceGroupName "$(resourceGroupName)"
+                -DataFactoryName "$(dataFactoryName)"
+              azurePowerShellVersion: LatestVersion
+            env:
+              TSES_BSE_USERNAME: $(tses-bse-user-name)
+              TSES_BSE_PASSWORD: $(tses-bse)
+
+- stage: PRE
+  displayName: Deploy PRE
+  dependsOn: TST
+  jobs:
+  - deployment: DeployADFPRE
+    displayName: Deploy ADF to PRE
+    environment: PRE
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: AzurePowerShell@5
+            displayName: Deploy ADF Artifacts
+            inputs:
+              azureSubscription: AZR-BSE-PRE1
+              ScriptType: FilePath
+              ScriptPath: scripts/Deploy-AdfObjects.ps1
+              ScriptArguments: >
+                -ResourceGroupName "$(preResourceGroupName)"
+                -DataFactoryName "$(preDataFactoryName)"
+              azurePowerShellVersion: LatestVersion
