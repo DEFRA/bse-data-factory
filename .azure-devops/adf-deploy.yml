@@ -52,14 +52,6 @@ stages:
           steps:
           - checkout: self
 
-          - task: AzureKeyVault@2
-            displayName: Get secrets from Key Vault
-            inputs:
-              azureSubscription: ${{ variables.serviceConnection }}
-              KeyVaultName: $(keyVaultName)
-              SecretsFilter: 'tses-bse-user-name,tses-bse'
-              RunAsPreJob: false
-
           - task: AzurePowerShell@5
             displayName: Deploy ADF Artifacts
             inputs:
@@ -70,9 +62,6 @@ stages:
                 -ResourceGroupName "$(resourceGroupName)"
                 -DataFactoryName "$(dataFactoryName)"
               azurePowerShellVersion: LatestVersion
-            env:
-              TSES_BSE_USERNAME: $(tses-bse-user-name)
-              TSES_BSE_PASSWORD: $(tses-bse)
 
 - stage: TST
   displayName: Deploy TST
