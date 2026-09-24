@@ -243,7 +243,8 @@ foreach ($file in $datasets)
 # ==================================================
 
 $pipelines = @(
-    "BSESS_Import.json"
+    "BSESS_Import.json",
+    "BSE_Access_Export.json"
 )
 
 foreach ($file in $pipelines)
