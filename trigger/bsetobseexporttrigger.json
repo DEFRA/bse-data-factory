@@ -9,12 +9,6 @@
 					"referenceName": "BSE_Access_Export",
 					"type": "PipelineReference"
 				}
-			},
-			{
-				"pipelineReference": {
-					"referenceName": "BSESS_Import",
-					"type": "PipelineReference"
-				}
 			}
 		],
 		"type": "ScheduleTrigger",
