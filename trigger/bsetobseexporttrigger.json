@@ -14,23 +14,16 @@
 		"type": "ScheduleTrigger",
 		"typeProperties": {
 			"recurrence": {
-				"frequency": "Week",
+				"frequency": "Day",
 				"interval": 1,
 				"startTime": "2026-09-22T00:00:00",
 				"timeZone": "GMT Standard Time",
 				"schedule": {
 					"minutes": [
-						20
-					],
-					"hours": [
 						0
 					],
-					"weekDays": [
-						"Monday",
-						"Tuesday",
-						"Wednesday",
-						"Thursday",
-						"Friday"
+					"hours": [
+						7
 					]
 				}
 			}
