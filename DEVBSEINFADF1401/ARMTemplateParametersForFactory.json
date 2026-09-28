@@ -1,0 +1,38 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "DEVBSEINFADF1401"
+		},
+		"AmazonRdsForSqlServer1_properties_typeProperties_server": {
+			"value": "tses.data.dev1.dev.cerespfm.cloud"
+		},
+		"AmazonRdsForSqlServer1_properties_typeProperties_database": {
+			"value": "tses"
+		},
+		"AmazonRdsForSqlServer1_properties_typeProperties_userName": {
+			"value": "tses_bse"
+		},
+		"AzureKeyVaultRDSTSE_properties_typeProperties_baseUrl": {
+			"value": "https://DEVBSEINFKV1401.vault.azure.net/"
+		},
+		"AzureSqlDatabaseBSE_properties_typeProperties_server": {
+			"value": "devbseinfsq1401.database.windows.net"
+		},
+		"AzureSqlDatabaseBSE_properties_typeProperties_database": {
+			"value": "BSE"
+		},
+		"sqlServer-PE_properties_privateLinkResourceId": {
+			"value": "/subscriptions/ec690d8b-e203-4a8f-a7d0-9e21244d23db/resourceGroups/DEVBSEINFRG1401/providers/Microsoft.Sql/servers/DEVBSEINFSQ1401"
+		},
+		"sqlServer-PE_properties_groupId": {
+			"value": "sqlServer"
+		},
+		"sqlServer-PE_properties_fqdns": {
+			"value": [
+				"devbseinfsq1401.database.windows.net"
+			]
+		}
+	}
+}

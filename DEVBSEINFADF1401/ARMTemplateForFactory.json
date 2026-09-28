@@ -1,0 +1,716 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "DEVBSEINFADF1401"
+		},
+		"AmazonRdsForSqlServer1_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "tses.data.dev1.dev.cerespfm.cloud"
+		},
+		"AmazonRdsForSqlServer1_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "tses"
+		},
+		"AmazonRdsForSqlServer1_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "tses_bse"
+		},
+		"AzureKeyVaultRDSTSE_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://DEVBSEINFKV1401.vault.azure.net/"
+		},
+		"AzureSqlDatabaseBSE_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "devbseinfsq1401.database.windows.net"
+		},
+		"AzureSqlDatabaseBSE_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "BSE"
+		},
+		"sqlServer-PE_properties_privateLinkResourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/ec690d8b-e203-4a8f-a7d0-9e21244d23db/resourceGroups/DEVBSEINFRG1401/providers/Microsoft.Sql/servers/DEVBSEINFSQ1401"
+		},
+		"sqlServer-PE_properties_groupId": {
+			"type": "string",
+			"defaultValue": "sqlServer"
+		},
+		"sqlServer-PE_properties_fqdns": {
+			"type": "array",
+			"defaultValue": [
+				"devbseinfsq1401.database.windows.net"
+			]
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/BSESS_Import')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AmazonRdsForSqlServerSource",
+								"sqlReaderQuery": "SELECT\n\t'00' + LEFT(LTRIM(rbseno), 2) + RIGHT('0000' + SUBSTRING(RTRIM(rbseno), 4, LEN(rbseno)), 5) AS FormattedRBSE,\n\tSample.RBSENo,\n\tanimal.AnimalID,\n\tanimal.EartagNo,\n\tanimal.BirthDate,\n\tCASE TestingGroup.TestingGroupID\n\t\tWHEN 3 THEN 'FS' WHEN 4 THEN 'CA'\n\t\tWHEN 9 THEN 'OTM3' WHEN 10 THEN 'OTM3'\n\t\tWHEN 11 THEN 'OTM3' WHEN '12' THEN 'OTM3'\n\t\tELSE NULL END AS TestGroupDerivedSurvey,\n\tTestingGroup.TestGroupName,\n\tSample.FinalResultID,\n\tResult.ResultName,\n\tanimal.NotificationDate,\n\tSample.BarCode\nFROM\n\t(animal INNER JOIN Sample ON animal.AnimalID = Sample.AnimalID)\n\tINNER JOIN TestingGroup ON animal.TestingGroupID = TestingGroup.TestingGroupID\n\tLEFT JOIN Result ON Sample.FinalResultID = Result.ResultID\nWHERE\n\tLen(RBSENo) > 3 AND\n\tanimal.SpeciesID = 1",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"preCopyScript": "TRUNCATE TABLE [dbo].[BSESSImport];",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "FormattedRBSE",
+											"type": "String",
+											"physicalType": "varchar"
+										},
+										"sink": {
+											"name": "RBSE",
+											"type": "String",
+											"physicalType": "char"
+										}
+									},
+									{
+										"source": {
+											"name": "RBSENo",
+											"type": "String",
+											"physicalType": "varchar"
+										},
+										"sink": {
+											"name": "UnformattedRBSE",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "AnimalID",
+											"type": "Decimal",
+											"physicalType": "decimal",
+											"scale": 0,
+											"precision": 18
+										},
+										"sink": {
+											"name": "AnimalIID",
+											"type": "Decimal",
+											"physicalType": "decimal",
+											"scale": 0,
+											"precision": 18
+										}
+									},
+									{
+										"source": {
+											"name": "EartagNo",
+											"type": "String",
+											"physicalType": "varchar"
+										},
+										"sink": {
+											"name": "Eartag",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "BirthDate",
+											"type": "DateTime",
+											"physicalType": "datetime"
+										},
+										"sink": {
+											"name": "BirthDate",
+											"type": "DateTime",
+											"physicalType": "datetime"
+										}
+									},
+									{
+										"source": {
+											"name": "TestGroupDerivedSurvey",
+											"type": "String",
+											"physicalType": "varchar"
+										},
+										"sink": {
+											"name": "TestGroupDerivedSurvey",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "TestGroupName",
+											"type": "String",
+											"physicalType": "varchar"
+										},
+										"sink": {
+											"name": "TestGroupName",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "FinalResultID",
+											"type": "Byte",
+											"physicalType": "tinyint"
+										},
+										"sink": {
+											"name": "FinalResultID",
+											"type": "Byte",
+											"physicalType": "tinyint"
+										}
+									},
+									{
+										"source": {
+											"name": "ResultName",
+											"type": "String",
+											"physicalType": "varchar"
+										},
+										"sink": {
+											"name": "FinalResultName",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									},
+									{
+										"source": {
+											"name": "NotificationDate",
+											"type": "DateTime",
+											"physicalType": "datetime"
+										},
+										"sink": {
+											"name": "NotificationDate",
+											"type": "DateTime",
+											"physicalType": "smalldatetime"
+										}
+									},
+									{
+										"source": {
+											"name": "BarCode",
+											"type": "String",
+											"physicalType": "varchar"
+										},
+										"sink": {
+											"name": "BarCode",
+											"type": "String",
+											"physicalType": "varchar"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "AmazonRdsForSqlServer",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "AzureSqlSink",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/AmazonRdsForSqlServer')]",
+				"[concat(variables('factoryId'), '/datasets/AzureSqlSink')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/BSE_Access_Export')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "sp_expAge",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[CopyHerdSizeToExportTable]"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabaseBSE",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "sp_expRelation",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[CopyRelationToExportTable]"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabaseBSE",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "sp_expFarm",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[CopyFarmToExportTable]"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabaseBSE",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "sp_expCase",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[CopyCaseToExportTable]"
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabaseBSE",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabaseBSE')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AmazonRdsForSqlServer')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AmazonRdsForSqlServer1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AmazonRdsForSqlServerTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AmazonRdsForSqlServer1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlSink')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabaseBSE",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "RBSE",
+						"type": "char"
+					},
+					{
+						"name": "UnformattedRBSE",
+						"type": "varchar"
+					},
+					{
+						"name": "AnimalIID",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 0
+					},
+					{
+						"name": "Eartag",
+						"type": "varchar"
+					},
+					{
+						"name": "BirthDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "TestGroupDerivedSurvey",
+						"type": "varchar"
+					},
+					{
+						"name": "TestGroupName",
+						"type": "varchar"
+					},
+					{
+						"name": "FinalResultID",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "FinalResultName",
+						"type": "varchar"
+					},
+					{
+						"name": "NotificationDate",
+						"type": "smalldatetime",
+						"precision": 16,
+						"scale": 0
+					},
+					{
+						"name": "BarCode",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "BSESSImport"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabaseBSE')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AmazonRdsForSqlServer1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AmazonRdsForSqlServer",
+				"typeProperties": {
+					"server": "[parameters('AmazonRdsForSqlServer1_properties_typeProperties_server')]",
+					"database": "[parameters('AmazonRdsForSqlServer1_properties_typeProperties_database')]",
+					"encrypt": "optional",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('AmazonRdsForSqlServer1_properties_typeProperties_userName')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "AzureKeyVaultRDSTSE",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "tses-bse"
+					}
+				},
+				"connectVia": {
+					"referenceName": "bse-integrationruntime-self-hosted",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/bse-integrationruntime-self-hosted')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureKeyVaultRDSTSE')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureKeyVaultRDSTSE')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('AzureKeyVaultRDSTSE_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlDatabaseBSE')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('AzureSqlDatabaseBSE_properties_typeProperties_server')]",
+					"database": "[parameters('AzureSqlDatabaseBSE_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SystemAssignedManagedIdentity"
+				},
+				"connectVia": {
+					"referenceName": "integrationRuntimeBSEDB",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/integrationRuntimeBSEDB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/bsetobseexporttrigger-pipeline')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2026-09-04T07:00:00",
+						"timeZone": "GMT Standard Time",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								7
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/bsetobseexporttrigger')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "BSE_Access_Export",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2026-09-22T00:00:00",
+						"timeZone": "GMT Standard Time",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								7
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/BSE_Access_Export')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tsestobsetrigger')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "BSESS_Import",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 1,
+						"startTime": "2026-09-24T11:21:00",
+						"timeZone": "GMT Standard Time",
+						"schedule": {
+							"minutes": [
+								20
+							],
+							"hours": [
+								0
+							],
+							"weekDays": [
+								"Monday",
+								"Tuesday",
+								"Wednesday",
+								"Thursday",
+								"Friday"
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/BSESS_Import')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AutoResolveIntegrationRuntime')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 0
+						}
+					}
+				},
+				"managedVirtualNetwork": {
+					"type": "ManagedVirtualNetworkReference",
+					"referenceName": "default"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/bse-integrationruntime-self-hosted')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {
+					"selfContainedInteractiveAuthoringEnabled": true
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/integrationRuntimeBSEDB')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "UK South",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 10,
+							"cleanup": false,
+							"customProperties": []
+						},
+						"pipelineExternalComputeScaleProperties": {
+							"timeToLive": 60,
+							"numberOfPipelineNodes": 1,
+							"numberOfExternalNodes": 1
+						}
+					}
+				},
+				"managedVirtualNetwork": {
+					"type": "ManagedVirtualNetworkReference",
+					"referenceName": "default"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/default')]",
+			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks",
+			"apiVersion": "2018-06-01",
+			"properties": {},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/default/sqlServer-PE')]",
+			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks/managedPrivateEndpoints",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"privateLinkResourceId": "[parameters('sqlServer-PE_properties_privateLinkResourceId')]",
+				"groupId": "[parameters('sqlServer-PE_properties_groupId')]",
+				"fqdns": "[parameters('sqlServer-PE_properties_fqdns')]"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
+			]
+		}
+	]
+}
