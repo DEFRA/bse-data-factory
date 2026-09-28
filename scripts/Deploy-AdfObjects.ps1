@@ -270,6 +270,74 @@ foreach ($file in $pipelines)
     Write-Host "SUCCESS: $($json.name)"
 }
 
+# ==================================================
+# Triggers
+# ==================================================
+
+$triggers = @(
+    "bsetobseexporttrigger.json",
+    "tsestobsetrigger.json"
+)
+
+foreach ($file in $triggers)
+{
+    $path = Join-Path $RepoRoot "trigger\$file"
+
+    if (-not (Test-Path $path))
+    {
+        throw "Trigger file not found: $path"
+    }
+
+    $json = Get-Content $path -Raw | ConvertFrom-Json
+    $triggerName = $json.name
+    $desiredState = $json.properties.runtimeState
+
+    $existingTrigger = Get-AzDataFactoryV2Trigger `
+        -ResourceGroupName $ResourceGroupName `
+        -DataFactoryName $DataFactoryName `
+        -Name $triggerName `
+        -ErrorAction SilentlyContinue
+
+    if ($existingTrigger -and $existingTrigger.RuntimeState -eq "Started")
+    {
+        Write-Host "Stopping trigger before update: $triggerName"
+
+        Stop-AzDataFactoryV2Trigger `
+            -ResourceGroupName $ResourceGroupName `
+            -DataFactoryName $DataFactoryName `
+            -Name $triggerName `
+            -Force | Out-Null
+    }
+
+    Write-Host "Deploying Trigger: $triggerName"
+
+    Set-AzDataFactoryV2Trigger `
+        -ResourceGroupName $ResourceGroupName `
+        -DataFactoryName $DataFactoryName `
+        -Name $triggerName `
+        -DefinitionFile $path `
+        -Force | Out-Null
+
+    Write-Host "SUCCESS: $triggerName"
+
+    if ($desiredState -eq "Started")
+    {
+        Write-Host "Starting trigger: $triggerName"
+
+        Start-AzDataFactoryV2Trigger `
+            -ResourceGroupName $ResourceGroupName `
+            -DataFactoryName $DataFactoryName `
+            -Name $triggerName `
+            -Force | Out-Null
+
+        Write-Host "SUCCESS: $triggerName started"
+    }
+    else
+    {
+        Write-Host "Trigger $triggerName left Stopped (desired state per source JSON)"
+    }
+}
+
 Write-Host ""
 Write-Host "====================================="
 Write-Host "ADF Dependency Deployment Completed"
