@@ -1,6 +1,5 @@
 {
 	"name": "AmazonRdsForSqlServer1",
-	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"annotations": [],
 		"type": "AmazonRdsForSqlServer",
@@ -11,11 +10,19 @@
 			"trustServerCertificate": false,
 			"authenticationType": "SQL",
 			"userName": "tses_bse",
-			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJmZmQ3YzQyYy1lZThiLTQxOTAtOTQ0Ny1hM2I0OTlhMzM1NGIiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "AzureKeyVaultRDSTSE",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "tses-bse"
+			}
 		},
 		"connectVia": {
 			"referenceName": "bse-integrationruntime-self-hosted",
 			"type": "IntegrationRuntimeReference"
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
 }

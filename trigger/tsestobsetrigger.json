@@ -1,12 +1,12 @@
 {
-	"name": "bsetobseexporttrigger",
+	"name": "tsestobsetrigger",
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Started",
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "BSE_Access_Export",
+					"referenceName": "BSESS_Import",
 					"type": "PipelineReference"
 				}
 			}
@@ -14,16 +14,23 @@
 		"type": "ScheduleTrigger",
 		"typeProperties": {
 			"recurrence": {
-				"frequency": "Day",
+				"frequency": "Week",
 				"interval": 1,
-				"startTime": "2026-09-22T00:00:00",
+				"startTime": "2026-09-24T11:21:00",
 				"timeZone": "GMT Standard Time",
 				"schedule": {
 					"minutes": [
-						0
+						20
 					],
 					"hours": [
-						7
+						0
+					],
+					"weekDays": [
+						"Monday",
+						"Tuesday",
+						"Wednesday",
+						"Thursday",
+						"Friday"
 					]
 				}
 			}
