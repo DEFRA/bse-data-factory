@@ -123,7 +123,7 @@ stages:
   - name: keyVaultName
     value: PRE${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncKeyVault }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
   - name: rdsServerName
-    value: '<PRE RDS host goes here>'
+    value: 'tses.data.prp1.prp.cerespfm.cloud'
   - name: serviceConnection
     value: AZR-${{ variables.project }}-PRE${{ variables.subscriptionNumber }}
   - name: sqlServerName
