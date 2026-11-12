@@ -134,3 +134,43 @@ stages:
                 -ResourceGroupName "$(preResourceGroupName)"
                 -DataFactoryName "$(preDataFactoryName)"
               azurePowerShellVersion: LatestVersion
+
+- stage: PRD
+  displayName: Deploy PRD
+  dependsOn: PRE
+  variables:
+  - name: resourceGroupName
+    value: PRD${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncResourceGroup }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+  - name: dataFactoryName
+    value: PRD${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncDataFactory }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+  - name: keyVaultName
+    value: PRD${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncKeyVault }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+  - name: rdsServerName
+    value: 'tses.data.dev1.dev.cerespfm.cloud'
+  - name: serviceConnection
+    value: AZR-${{ variables.project }}-PRD${{ variables.subscriptionNumber }}
+  - name: sqlServerName
+    value: PRD${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncSqlServer }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+  jobs:
+  - deployment: DeployADFPRD
+    displayName: Deploy ADF to PRD
+    environment: PRD
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+ 
+          - task: AzurePowerShell@5
+            displayName: Deploy ADF Artifacts
+            inputs:
+              azureSubscription: ${{ variables.serviceConnection }}
+              ScriptType: FilePath
+              ScriptPath: scripts/Deploy-AdfObjects.ps1
+              ScriptArguments: >
+                -ResourceGroupName "$(resourceGroupName)"
+                -DataFactoryName "$(dataFactoryName)"
+                -KeyVaultName "$(keyVaultName)"
+                -RdsServerName "$(rdsServerName)"
+                -SqlServerName "$(sqlServerName)"
+              azurePowerShellVersion: LatestVersion
