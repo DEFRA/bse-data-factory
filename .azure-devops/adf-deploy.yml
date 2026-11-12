@@ -60,7 +60,7 @@ stages:
   condition: >-
     and(
       eq('${{ parameters.deployToDev }}', true),
-      eq(variables['Build.SourceBranchName'], 'develop')
+      eq(variables['Build.SourceBranchName'], 'main')
     )
   variables:
   - name: resourceGroupName
