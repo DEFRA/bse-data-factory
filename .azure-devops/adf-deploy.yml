@@ -158,7 +158,7 @@ stages:
   - name: keyVaultName
     value: PRD${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncKeyVault }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
   - name: rdsServerName
-    value: 'REPLACE-WITH-PRD-RDS-SERVER' # TODO: set the production RDS host
+    value: 'tses.data.prd1.prd.cerespfm.cloud'
   - name: serviceConnection
     value: AZR-${{ variables.project }}-PRD${{ variables.subscriptionNumber }}
   - name: sqlServerName
