@@ -3,7 +3,6 @@ name: $(Build.BuildId)
 trigger:
   branches:
     include:
-      - develop
       - main
 
 pr: none
