@@ -128,6 +128,19 @@ stages:
     dependsOn: TST
   ${{ else }}:
     dependsOn: []
+  variables:
+  - name: resourceGroupName
+    value: PRE${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncResourceGroup }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+  - name: dataFactoryName
+    value: PRE${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncDataFactory }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+  - name: keyVaultName
+    value: PRE${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncKeyVault }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+  - name: rdsServerName
+    value: 'tses.data.prp1.prp.cerespfm.cloud'
+  - name: serviceConnection
+    value: AZR-${{ variables.project }}-PRE${{ variables.subscriptionNumber }}
+  - name: sqlServerName
+    value: PRE${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncSqlServer }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
   jobs:
   - deployment: DeployADFPRE
     displayName: Deploy ADF to PRE
@@ -137,15 +150,19 @@ stages:
         deploy:
           steps:
           - checkout: self
+
           - task: AzurePowerShell@5
             displayName: Deploy ADF Artifacts
             inputs:
-              azureSubscription: AZR-BSE-PRE1
+              azureSubscription: ${{ variables.serviceConnection }}
               ScriptType: FilePath
               ScriptPath: scripts/Deploy-AdfObjects.ps1
               ScriptArguments: >
-                -ResourceGroupName "$(preResourceGroupName)"
-                -DataFactoryName "$(preDataFactoryName)"
+                -ResourceGroupName "$(resourceGroupName)"
+                -DataFactoryName "$(dataFactoryName)"
+                -KeyVaultName "$(keyVaultName)"
+                -RdsServerName "$(rdsServerName)"
+                -SqlServerName "$(sqlServerName)"
               azurePowerShellVersion: LatestVersion
 - stage: PRD
   displayName: Deploy PRD

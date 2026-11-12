@@ -6,8 +6,8 @@
 		"typeProperties": {
 			"server": "tses.data.dev1.dev.cerespfm.cloud",
 			"database": "tses",
-			"encrypt": "optional",
-			"trustServerCertificate": false,
+			"encrypt": "mandatory",
+			"trustServerCertificate": true,
 			"authenticationType": "SQL",
 			"userName": "tses_bse",
 			"password": {
