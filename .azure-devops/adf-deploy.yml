@@ -146,7 +146,7 @@ stages:
   - name: keyVaultName
     value: PRD${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncKeyVault }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
   - name: rdsServerName
-    value: 'tses.data.dev1.dev.cerespfm.cloud'
+    value: 'tses.data.prd1.prd.cerespfm.cloud'
   - name: serviceConnection
     value: AZR-${{ variables.project }}-PRD${{ variables.subscriptionNumber }}
   - name: sqlServerName
