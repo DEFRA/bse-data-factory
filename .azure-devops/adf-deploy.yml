@@ -10,6 +10,15 @@ pr: none
 pool:
   name: DEFRA-COMMON-WINDOWS-SSV3
 
+parameters:
+- name: deployScope
+  displayName: Environments to deploy
+  type: string
+  default: All
+  values:
+  - All
+  - PreAndPrd
+
 variables:
 
 - name: project
@@ -33,88 +42,92 @@ variables:
 
 stages:
 
-- stage: DEV
-  displayName: Deploy DEV
-  variables:
-  - name: resourceGroupName
-    value: DEV${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncResourceGroup }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
-  - name: dataFactoryName
-    value: DEV${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncDataFactory }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
-  - name: keyVaultName
-    value: DEV${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncKeyVault }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
-  - name: rdsServerName
-    value: 'tses.data.dev1.dev.cerespfm.cloud'
-  - name: serviceConnection
-    value: AZR-${{ variables.project }}-DEV${{ variables.subscriptionNumber }}
-  - name: sqlServerName
-    value: DEV${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncSqlServer }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
-  jobs:
-  - deployment: DeployADFDEV
-    displayName: Deploy ADF to DEV
-    environment: DEV
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - checkout: self
+- ${{ if eq(parameters.deployScope, 'All') }}:
+  - stage: DEV
+    displayName: Deploy DEV
+    variables:
+    - name: resourceGroupName
+      value: DEV${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncResourceGroup }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+    - name: dataFactoryName
+      value: DEV${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncDataFactory }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+    - name: keyVaultName
+      value: DEV${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncKeyVault }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+    - name: rdsServerName
+      value: 'tses.data.dev1.dev.cerespfm.cloud'
+    - name: serviceConnection
+      value: AZR-${{ variables.project }}-DEV${{ variables.subscriptionNumber }}
+    - name: sqlServerName
+      value: DEV${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncSqlServer }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+    jobs:
+    - deployment: DeployADFDEV
+      displayName: Deploy ADF to DEV
+      environment: DEV
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - checkout: self
 
-          - task: AzurePowerShell@5
-            displayName: Deploy ADF Artifacts
-            inputs:
-              azureSubscription: ${{ variables.serviceConnection }}
-              ScriptType: FilePath
-              ScriptPath: scripts/Deploy-AdfObjects.ps1
-              ScriptArguments: >
-                -ResourceGroupName "$(resourceGroupName)"
-                -DataFactoryName "$(dataFactoryName)"
-                -KeyVaultName "$(keyVaultName)"
-                -RdsServerName "$(rdsServerName)"
-                -SqlServerName "$(sqlServerName)"
-              azurePowerShellVersion: LatestVersion
+            - task: AzurePowerShell@5
+              displayName: Deploy ADF Artifacts
+              inputs:
+                azureSubscription: ${{ variables.serviceConnection }}
+                ScriptType: FilePath
+                ScriptPath: scripts/Deploy-AdfObjects.ps1
+                ScriptArguments: >
+                  -ResourceGroupName "$(resourceGroupName)"
+                  -DataFactoryName "$(dataFactoryName)"
+                  -KeyVaultName "$(keyVaultName)"
+                  -RdsServerName "$(rdsServerName)"
+                  -SqlServerName "$(sqlServerName)"
+                azurePowerShellVersion: LatestVersion
 
-- stage: TST
-  displayName: Deploy TST
-  dependsOn: DEV
-  variables:
-  - name: resourceGroupName
-    value: TST${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncResourceGroup }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
-  - name: dataFactoryName
-    value: TST${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncDataFactory }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
-  - name: keyVaultName
-    value: TST${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncKeyVault }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
-  - name: rdsServerName
-    value: 'tses.data.dev1.dev.cerespfm.cloud'
-  - name: serviceConnection
-    value: AZR-${{ variables.project }}-TST${{ variables.subscriptionNumber }}
-  - name: sqlServerName
-    value: TST${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncSqlServer }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
-  jobs:
-  - deployment: DeployADFTST
-    displayName: Deploy ADF to TST
-    environment: TST
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - checkout: self
+  - stage: TST
+    displayName: Deploy TST
+    dependsOn: DEV
+    variables:
+    - name: resourceGroupName
+      value: TST${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncResourceGroup }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+    - name: dataFactoryName
+      value: TST${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncDataFactory }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+    - name: keyVaultName
+      value: TST${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncKeyVault }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+    - name: rdsServerName
+      value: 'tses.data.dev1.dev.cerespfm.cloud'
+    - name: serviceConnection
+      value: AZR-${{ variables.project }}-TST${{ variables.subscriptionNumber }}
+    - name: sqlServerName
+      value: TST${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncSqlServer }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
+    jobs:
+    - deployment: DeployADFTST
+      displayName: Deploy ADF to TST
+      environment: TST
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - checkout: self
 
-          - task: AzurePowerShell@5
-            displayName: Deploy ADF Artifacts
-            inputs:
-              azureSubscription: ${{ variables.serviceConnection }}
-              ScriptType: FilePath
-              ScriptPath: scripts/Deploy-AdfObjects.ps1
-              ScriptArguments: >
-                -ResourceGroupName "$(resourceGroupName)"
-                -DataFactoryName "$(dataFactoryName)"
-                -KeyVaultName "$(keyVaultName)"
-                -RdsServerName "$(rdsServerName)"
-                -SqlServerName "$(sqlServerName)"
-              azurePowerShellVersion: LatestVersion
-          
+            - task: AzurePowerShell@5
+              displayName: Deploy ADF Artifacts
+              inputs:
+                azureSubscription: ${{ variables.serviceConnection }}
+                ScriptType: FilePath
+                ScriptPath: scripts/Deploy-AdfObjects.ps1
+                ScriptArguments: >
+                  -ResourceGroupName "$(resourceGroupName)"
+                  -DataFactoryName "$(dataFactoryName)"
+                  -KeyVaultName "$(keyVaultName)"
+                  -RdsServerName "$(rdsServerName)"
+                  -SqlServerName "$(sqlServerName)"
+                azurePowerShellVersion: LatestVersion
+
 - stage: PRE
   displayName: Deploy PRE
-  dependsOn: TST
+  ${{ if eq(parameters.deployScope, 'All') }}:
+    dependsOn: TST
+  ${{ else }}:
+    dependsOn: []
   jobs:
   - deployment: DeployADFPRE
     displayName: Deploy ADF to PRE
@@ -134,7 +147,6 @@ stages:
                 -ResourceGroupName "$(preResourceGroupName)"
                 -DataFactoryName "$(preDataFactoryName)"
               azurePowerShellVersion: LatestVersion
-
 - stage: PRD
   displayName: Deploy PRD
   dependsOn: PRE
@@ -146,7 +158,7 @@ stages:
   - name: keyVaultName
     value: PRD${{ variables.project }}${{ variables.ncFunctionInfrastructure }}${{ variables.ncKeyVault }}${{ variables.subscriptionNumber }}${{ variables.regionNumber }}${{ variables.instanceNumber }}
   - name: rdsServerName
-    value: 'tses.data.prd1.prd.cerespfm.cloud'
+    value: 'REPLACE-WITH-PRD-RDS-SERVER' # TODO: set the production RDS host
   - name: serviceConnection
     value: AZR-${{ variables.project }}-PRD${{ variables.subscriptionNumber }}
   - name: sqlServerName
@@ -160,7 +172,7 @@ stages:
         deploy:
           steps:
           - checkout: self
- 
+
           - task: AzurePowerShell@5
             displayName: Deploy ADF Artifacts
             inputs:
